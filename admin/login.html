@@ -82,9 +82,10 @@
           },
           success: function (backData) {
 
-            // console.log(backData);
+            console.log(backData);
             if (backData.code == 200) {
               // 登入成功后 有个token值 保存在本地永久
+              //前面window可以省略
               window.localStorage.setItem('token', backData.token)
               // alert('登入成功');
               // $('#myModal').modal()
