@@ -37,7 +37,75 @@
       </form>
     </div>
   </div>
+  <!-- 模态框  单独不要和原HTML代码 混淆-->
+  <div class="modal fade" tabindex="-1" role="dialog" id="myModal">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+              aria-hidden="true">&times;</span></button>
+          <h4 class="modal-title">友情提示</h4>
+        </div>
+        <div class="modal-body">
+          <p>请输入用户名和密码</p>
+        </div>
+        <div class="modal-footer">
+          <!-- <button type="button" class="btn btn-default" data-dismiss="modal">Close</button> -->
+          <button type="button" class="btn btn-primary" data-dismiss="modal">确定</button>
+        </div>
+      </div><!-- /.modal-content -->
+    </div><!-- /.modal-dialog -->
+  </div><!-- /.modal -->
 
+  <script>
+    $(function () {
+      $('.input_sub').click(function (e) {
+        // 提交按钮在form中 有默认提交行为  应该阻止 不然默认跳转另外提交页面
+        e.preventDefault();
+        let username = $('.input_txt').val().trim();
+        let password = $('.input_pass').val().trim();
+        // 非空判断
+        if (username.length == 0 || password == 0) {
+          // alert('请输入用户名或密码');
+          $('.modal-body p').text('请输入用户名和密码')
+          $('#myModal').modal()
+          // 点击没输入密码或用户名就提示请您输入 然后函数里面 后面的没必要执行啦 return结束函数
+          return;
+        }
+        $.ajax({
+          url: 'http://localhost:8080/api/v1/admin/user/login',
+          type: 'post',
+          dataType: 'json',
+          data: {
+            username: username,
+            password: password
+          },
+          success: function (backData) {
+
+            // console.log(backData);
+            if (backData.code == 200) {
+              // 登入成功后 有个token值 保存在本地永久
+              window.localStorage.setItem('token', backData.token)
+              // alert('登入成功');
+              // $('#myModal').modal()
+              // 输入正确密码 点击登入 弹框 应该点击确认后才跳转index.html (上面实际是弹框了只不过很快跳转页面啦效果不明显)
+              $('.modal-body p').text('登入成功')
+              $('#myModal').modal()
+              //点击确认按钮，模态框消失之后的事件
+              $('#myModal').on('hidden.bs.modal', function () {
+                window.location.href = './index.html'
+              })
+
+            } else {
+              // alert(backData.msg)
+              $('.modal-body p').text(backData.msg)
+              $('#myModal').modal()
+            }
+          }
+        })
+      })
+    })
+  </script>
 </body>
 
 </html>
