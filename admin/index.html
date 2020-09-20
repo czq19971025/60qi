@@ -25,21 +25,29 @@
         </div>
         <!-- 左侧导航栏 -->
         <div class="menu">
-            <div class="level01 active"><a href="#" target="main_frame"><i
-                        class="iconfont icon-yidiandiantubiao04"></i><span>首页</span></a></div>
+            <div class="level01 active"><a href="./main_count.html" target="main_frame"><i
+                        class="iconfont icon-yidiandiantubiao04"></i><span>首页</span></a>
+            </div>
+            <!--下面要把target="main_frame" 删掉 因为该级点击显示里面的二级 该级没有对应的内容 如果不删的话 指向iframe   # 跳转当前index.html页面  那么整个index.html 都会显示在iframe中 因此不行-->
             <div class="level01"><a href="#"><i class="iconfont icon-icon-article"></i><span>文章管理</span><b
-                        class="iconfont icon-arrowdownl"></b></a></div>
+                        class="iconfont icon-arrowdownl"></b></a>
+            </div>
             <ul class="level02">
-                <li><a href="#" target="main_frame"><i class="iconfont icon-previewright"></i><span>文章列表</span></a></li>
-                <li><a href="#" target="main_frame"><i class="iconfont icon-previewright"></i><span>发表文章</span></a></li>
-                <li><a href="#" target="main_frame"><i class="iconfont icon-previewright"></i><span>文章类别管理</span></a>
+                <li><a href="./article_list.html" target="main_frame"><i
+                            class="iconfont icon-previewright"></i><span>文章列表</span></a></li>
+                <li><a href="./article_release.html" target="main_frame"><i
+                            class="iconfont icon-previewright"></i><span>发表文章</span></a></li>
+                <li><a href="./article_category.html" target="main_frame"><i
+                            class="iconfont icon-previewright"></i><span>文章类别管理</span></a>
                 </li>
             </ul>
 
-            <div class="level01"><a href="#" target="main_frame"><i
-                        class="iconfont icon-comment"></i><span>评论管理</span></a></div>
-            <div class="level01" id="user"><a href="#" target="main_frame"><i
-                        class="iconfont icon-user"></i><span>个人中心</span></a></div>
+            <div class="level01"><a href="./comment_list.html" target="main_frame"><i
+                        class="iconfont icon-comment"></i><span>评论管理</span></a>
+            </div>
+            <div class="level01" id="user"><a href="./user.html" target="main_frame"><i
+                        class="iconfont icon-user"></i><span>个人中心</span></a>
+            </div>
         </div>
         <!-- 顶部栏 -->
         <div class="header_bar">
@@ -51,13 +59,15 @@
         </div>
         <!-- 右侧主体内容 -->
         <div class="main" id="main_body">
-
+            <iframe src="./main_count.html" frameborder="0" name="main_frame"
+                style="width: 100%;height: 100%;"></iframe>
         </div>
     </div>
+    <script src="./libs/http.js"></script>
     <script>
         $(function () {
             $.ajax({
-                url: 'http://localhost:8080/api/v1/admin/user/info',
+                url: BigNew.user_info,
                 type: 'get',
                 dataType: 'json',
                 // 在jqueryjs文件中设置全局的请求头 那样就不要每次是用接口 都设置请求头了
@@ -70,7 +80,37 @@
                     }
 
                 }
+            });
+
+            // 退出登入 没有接口
+            // 思路 点击退出删除本地存储的token 然后跳跳转到登入页面
+            $('.logout').click(function () {
+                if (confirm('你确定要退出吗')) {
+                    window.localStorage.removeItem('token');
+                    window.location.href = './login.html'
+                }
+
+            });
+            //一级菜单的点击事件
+            $('.level01').click(function () {
+                $(this).addClass('active').siblings('.level01').removeClass('active');
+
+                // 判断是否点击啦文章管理 点击了 就让他内容展示出来 再次点击就影藏  再点击又显示一次这样
+
+                if ($(this).index() == 1) {
+                    $('.level02').slideToggle();
+
+                } else {
+                    $('.level02 li').removeClass('active')
+                }
+            });
+            // 二级菜单的点击事件
+            $('.level02 li').click(function () {
+                $(this).addClass('active').siblings('li').removeClass('active');
+                $('.level01').removeClass('active');
+                $('.level01:eq(1)').addClass('active')
             })
+
         })
     </script>
 </body>
