@@ -36,7 +36,7 @@
                             <option value="草稿">草稿</option>
                             <option value="已发布">已发布</option>
                         </select>
-                        <button id="btnSearch" class="btn btn-default btn-sm">筛选</button>
+                        <button id="btnSearch" class="btn btn-default btn-sm btn-shai">筛选</button>
                     </form>
                 </div>
                 <div class="col-xs-6">
@@ -72,6 +72,90 @@
             </div>
         </div>
     </div>
+    <!-- 模板引擎  默认显示全部文章-->
+    <script id="listAll" type="text/html">
+        {{each data.data v}}
+        <tr>
+            <td>{{v.title}}</td>
+            <td>{{v.author}}</td>
+            <td>{{v.categoryId}}</td>
+            <td class="text-center">{{v.date}}</td>
+            <td class="text-center">{{v.state}}</td>
+            <td class="text-center">
+                <a data-id='{{v.id}}' href="article_edit.html" class="btn btn-default btn-xs">编辑</a>
+                <a data-id='{{v.id}}' href="javascript:void(0);" class="btn btn-danger btn-xs delete">删除</a>
+            </td>
+        </tr>
+        {{/each}}
+    </script>
+    <!-- 分类刷选模板引擎 -->
+    <script id="ication" type="text/html">
+        <option value="">所有分类</option>
+        {{each data v}}
+        <option value="{{v.id}}">{{v.name}}</option>
+        {{/each}}
+    </script>
+    <script src="./libs/http.js"></script>
+    <script>
+        $(function () {
+            $.ajax({
+                url: BigNew.article_query,
+                type: 'get',
+                dataType: 'json',
+                data: {
+                    type: '',
+                    state: '',
+                    page: 1,
+                    perpage: 10
+                },
+                success: function (backData) {
+                    // console.log(backData);
+                    if (backData.code == 200) {
+                        let dataValue = template('listAll', backData);
+                        $('tbody').html(dataValue)
+                    }
+                }
+            });
+            // 显示刷选分类里面全部选项
+            $.ajax({
+                url: BigNew.category_list,
+                type: 'get',
+                dataType: 'json',
+
+                success: function (backData) {
+                    // console.log(backData);
+                    if (backData.code == 200) {
+                        $('#selCategory').html(template('ication', backData))
+                    }
+                }
+            });
+            // 点击筛选按钮 筛选 筛选按钮在 form表单 有默认的提交事件 因此需要阻止 默认行为
+            // 注册点击事件
+            $('.btn-shai').click(function (e) {
+                e.preventDefault()
+                $.ajax({
+                    url: BigNew.article_query,
+                    type: 'get',
+                    dataType: 'json',
+                    data: {
+                        type: $('#selCategory').val(),
+                        state: $('#selStatus').val(),
+                        page: 1,
+                        perpage: 10
+                    },
+                    success: function (backData) {
+                        console.log(backData);
+                        if (backData.code == 200) {
+                            let dataValue = template('listAll', backData);
+                            $('tbody').html(dataValue)
+                        }
+                    }
+                });
+            })
+
+
+        })
+    </script>
 </body>
 
 </html>
