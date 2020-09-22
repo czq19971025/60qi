@@ -112,8 +112,15 @@
                     console.log(backData);
                     if (backData.code == 200) {
                         alert('修改成功');
+                        //  window指的是当前页面user.html  点击修改刷新默认回到index.html index.html是user.html的父级 因此需要下面这样写
                         window.parent.location.reload()
                     }
+                    // 下面这里写成了一个等号也不会出问题 原因是赋值表达式返回值永远是后面的值 因此if里面的 
+                    // backData.code = 200 返回值是 200 那么if(200) 默认转换布尔型 200 是正常数字(不是undefined 等等)因此就是if(true) 所以不会出错 这样的话不规范 200 写成300  400 等等都可以只要数字正常即可 不标准规范 因此不要这样写 应该写backData.code == 200
+                    // if (backData.code = 200) {
+                    //     alert('修改成功');
+                    //     window.parent.location.reload()
+                    // }
                 }
             });
         });

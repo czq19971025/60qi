@@ -35,7 +35,8 @@
                         <td>奇趣事</td>
                         <td>funny</td>
                         <td class="text-center">
-                            <a href="javascript:void(0);" data-toggle="modal" class=" btn btn-info btn-xs">编辑</a>
+                            <a href="javascript:void(0);" data-toggle="modal"
+                                class=" btn btn-info btn-xs repair1">编辑</a>
                             <a href="javascript:void(0);" class="btn btn-danger btn-xs">删除</a>
                         </td>
                     </tr>
@@ -43,7 +44,8 @@
                 <tfoot>
                     <tr>
                         <td colspan="3" class="text-center">
-                            <a href="javascript:void(0)" class="btn btn-success" id="xinzengfenlei" data-toggle="modal"
+                            <!-- javascript:void(0)  下面这个需要删掉 不然报错 (但并不影响结果) 经老师确认这个不是错误 只是提示而已 -->
+                            <a href="#" class="btn btn-success" id="xinzengfenlei" data-toggle="modal"
                                 data-target="#myModal">新增分类</a>
                         </td>
                     </tr>
@@ -51,5 +53,158 @@
             </table>
         </div>
     </div>
+
+    <!-- 模态框 -->
+    <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                            aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="exampleModalLabel">文章分类</h4>
+                </div>
+                <div class="modal-body">
+                    <form>
+                        <div class="form-group">
+                            <label for="recipient-name" class="control-label happy">分类名称</label>
+                            <input type="text" class="form-control" id="recipient-name">
+                        </div>
+                        <div class="form-group">
+                            <label for="message-text" class="control-label slug1">分类简介</label>
+                            <input class="form-control" id="message-text">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default del" data-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary add1">新增</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- 模板引擎 -->
+    <script id="cat_list" type="text/html">
+        {{each data v}}
+        <tr>
+            <td>{{v.name}}</td>
+            <td>{{v.slug}}</td>
+            <td class="text-center">
+                <!--   javascript:void(0)  下面这个需要删掉 不然报错 -->
+                <a href="#;" data-toggle="modal" class=" btn btn-info btn-xs rel" data-target="#myModal"
+                    data-id='{{v.id}}'>编辑</a>
+                <!-- id暂时用不到 先定义自定义属性保存后面用到 -->
+                <a href="javascript:void(0)" class="btn btn-danger btn-xs delete1" data-id='{{v.id}}'>删除</a>
+            </td>
+        </tr>
+        {{/each}}
+    </script>
+    <script src="./libs/http.js"></script>
+    <script>
+        $(function () {
+            $.ajax({
+                url: BigNew.category_list,
+                type: 'get',
+                dataType: 'json',
+
+                success: function (backData) {
+                    // console.log(backData);
+                    if (backData.code == 200) {
+                        let dataValue = template('cat_list', backData);
+                        $('tbody').html(dataValue)
+                    }
+                }
+            });
+            // 给模态框注册弹出事件 一弹出 就做这个事件
+            $('#myModal').on('show.bs.modal', function (e) {
+                // e.relatedTarget  // 谁触发弹出模态框
+                // console.log(e.relatedTarget);
+                if ($(e.relatedTarget).text() == '新增分类') {
+
+                    $('.add1').text('新增')
+                } else {
+                    $('#recipient-name').val($(e.relatedTarget).parent().prev().prev().text())
+                    $('#message-text').val($(e.relatedTarget).parent().prev().text())
+                    $('.add1').text('编辑');
+                    //将当前编辑的 id给模态框 确定按钮
+                    $('.add1').attr('data-id', $(e.relatedTarget).attr('data-id'))
+
+                }
+
+            });
+            // 取消
+            $('.del').on('click', function () {
+                //重置表单  reset() dom 方法
+                $('form')[0].reset();
+            });
+            // 新增或编辑
+            $('.add1').on('click', function (e) {
+                // 必须指定对应的id
+                let id = $(this).attr('data-id');
+                if ($('.add1').text() == '新增') {
+                    // 新增
+                    $.ajax({
+                        url: BigNew.category_add,
+                        type: 'post',
+                        dataType: 'json',
+                        data: {
+                            name: $('#recipient-name').val(),
+                            slug: $('#message-text').val()
+                        },
+                        success: function (backData) {
+                            console.log(backData);
+                            if (backData.code == 201) {
+                                alert('新增成功')
+                                window.location.reload();
+                            }
+                        }
+                    });
+                } else {
+                    // 编辑
+                    $.ajax({
+                        url: BigNew.category_edit,
+                        type: 'post',
+                        dataType: 'json',
+                        data: {
+
+                            id: id,
+                            name: $('#recipient-name').val(),
+                            slug: $('#message-text').val()
+                        },
+                        success: function (backData) {
+                            // console.log(backData);
+                            if (backData.code == 200) {
+                                alert('编辑成功')
+                                window.location.reload();
+                            }
+
+                        }
+                    });
+                }
+
+            });
+            // 删除操作   因为tr是 动态创建的   因此需要用事件委托的方式注册事件
+            $('tbody').on('click', '.delete1', function () {
+                console.log($(this).attr('data-id'));
+                $.ajax({
+                    url: BigNew.category_delete,
+                    type: 'post',
+                    dataType: 'json',
+                    data: {
+                        id: $(this).attr('data-id')
+                    },
+                    success: function (backData) {
+                        console.log(backData);
+                        if (backData.code == 204) {
+                            if (confirm('你确定要删除吗?')) {
+                                window.location.reload();
+                            }
+                        }
+                    }
+                });
+            })
+        })
+    </script>
+
+</body>
 
 </html>
