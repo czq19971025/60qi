@@ -98,7 +98,7 @@
         <option value="{{v.id}}">{{v.name}}</option>
         {{/each}}
     </script>
-   
+
     <script src="./libs/http.js"></script>
     <script>
         $(function () {
@@ -220,8 +220,12 @@
                     }
                 });
             });
-        
 
+            //   优化 该页面 点击发布文章  index.html左侧列表应该发表文章高亮
+            $('#release_btn').click(function () {
+
+                parent.$('.level02 li:eq(1)').click()
+            })
 
 
         })
