@@ -14,6 +14,14 @@
     <script src="./libs/jquery-1.12.4.min.js"></script>
     <!-- 模板引擎 -->
     <script src="./libs/template-web.js"></script>
+    <!-- 引入接口文件 -->
+    <script src="./libs/http.js"></script>
+    <!-- 引入日期插件相关文件 -->
+    <link rel="stylesheet" href="./libs/jedate/css/jeDate-test.css">
+    <link rel="stylesheet" href="./libs/jedate/css/jedate.css">
+    <script src="./libs/jedate/js/jedate.js"></script>
+    <!-- 引入富文本插件相关文件 -->
+    <script src="./libs/wangEditor.min.js"></script>
 </head>
 
 <body>
@@ -39,7 +47,7 @@
                 <div class="form-group">
                     <label for="inputCategory" class="col-sm-2 control-label">文章类别：</label>
                     <div class="col-sm-4">
-                        <select class="form-control category" name="categoryId">
+                        <select class="form-control category cat" name="categoryId">
                             <option>类别一</option>
                             <option>类别二</option>
                             <option>类别三</option>
@@ -50,12 +58,23 @@
                 </div>
                 <div class="form-group">
                     <label class="col-sm-2 control-label">发布时间：</label>
-                    <div class="col-sm-4">
+
+                    <div class="jeinpbox col-sm-4">
+                        <input name="date" type="text" class="jeinput" id="testico" placeholder="YYYY-MM-DD">
+                        <div class="icons jebtns" onclick="jeDate('#testico',{trigger:false,format: 'YYYY-MM-DD', zIndex: 10001,theme: {
+                                bgcolor: '#00A680',
+                                pnColor: '#00DDAA'
+                            }})">
+                        </div>
                     </div>
+
                 </div>
                 <div class="form-group">
                     <label for="inputEmail3" class="col-sm-2 control-label">文章内容：</label>
-                    <div class="col-sm-10">
+
+                    <div id="editor" class="col-sm-10">
+                        <!-- <p>欢迎使用 <b>wangEditor</b> 富文本编辑器</p> -->
+
                     </div>
                 </div>
                 <div class="form-group">
@@ -67,6 +86,124 @@
             </form>
         </div>
     </div>
+    <!-- 编辑页面里的分类  模板引擎 -->
+    <script id="category" type="text/html">
+        {{each data v}}
+        <option value="{{v.id}}">{{v.name}}</option>
+        {{/each}}
+    </script>
+    <script>
+        $(function () {
+            // 编辑页面 日期插件引用
+            jeDate('#testico', {
+                // trigger: false,
+                // isTime:true,
+                isinitVal: true,
+                format: 'YYYY-MM-DD',
+                // 提高一下层级
+                zIndex: 10001,
+                // 更改主题 更多操作见文帝
+                theme: {
+                    bgcolor: "#00A680",
+                    pnColor: "#00DDAA"
+                }
+
+            })
+
+            // 编辑页面 引用 富文本插件 
+            let E = window.wangEditor
+            let editor = new E('#editor')
+            // 或者 var editor = new E( document.getElementById('editor') )
+            editor.create()
+
+            // 加载编辑页面里面的分类
+            $.ajax({
+                url: BigNew.category_list,
+                type: 'get',
+                dataType: 'json',
+
+                success: function (backData) {
+                    // console.log(backData);
+                    if (backData.code == 200) {
+                        $('.category').html(template('category', backData))
+
+                    }
+                }
+            });
+
+
+            // 编辑操作 在编辑操作之前 先要把里面的分类全部请求请求加载出来
+            //   因为编辑是动态生成的 因此需要  事件委托方式给他注册事件
+            //  获取传过来的id
+            let id = window.location.search.split('=')[1];
+            // console.log(id);
+            $.ajax({
+                url: BigNew.article_search,
+                type: 'get',
+                dataType: 'json',
+                data: {
+                    id: id
+                },
+                success: function (backData) {
+                    // console.log(backData);
+                    if (backData.code == 200) {
+                        // 渲染到编辑页面
+                        $('#inputTitle').val(backData.data.title);
+                        $('#testico').val(backData.data.date);
+                        $('.cat').val(backData.data.categoryId);
+                        $('.article_cover').attr('src', backData.data.cover);
+                        editor.txt.html(backData.data.content)
+                    }
+                }
+            });
+            // 更换图片  图片预览效果
+            //1.给file表单元素注册onchange事件
+            $('#inputCover').change(function () {
+                //1.2 获取用户选择的图片
+                let file = this.files[0];
+                //1.3 将文件转为src路径
+                let url = URL.createObjectURL(file);
+                //1.4 将url路径赋值给img标签的src
+                $('.article_cover').attr('src', url);
+            });
+
+            //  修改 /存为草稿
+            // console.log($('.btn-edit,.btn-draft'));
+
+            $('.btn-edit,.btn-draft').on('click', function (e) {
+                //禁用表单默认提交事件
+                e.preventDefault();
+                // console.log('我被点击啦');
+                let state = $(this).hasClass('btn-edit') ? '已发布' : '草稿';
+                // console.log(state);
+                //创建FormData对象：参数是表单dom对象
+                let fd = new FormData($(form)[0])
+                fd.append('id', id);
+                fd.append('content', editor.txt.html());
+                fd.append('state', state);
+
+                $.ajax({
+                    url: BigNew.article_edit,
+                    type: 'post',
+                    dataType: 'json',
+                    data: fd,
+                    contentType: false,
+                    processData: false,
+                    success: function (backData) {
+                        // console.log(backData);
+                        if (backData.code == 200) {
+                            alert('修改成功')
+                            // 返回上一页面 这个back本来不会刷新浏览器 只是我们live-server给我们刷新啦
+                            // window.history.back()
+
+                            //或者用这种跳转到那个页面 跳转默认会刷新页面
+                            window.location.href = './article_list.html'
+                        }
+                    }
+                });
+            });
+        })
+    </script>
 </body>
 
 </html>
