@@ -16,6 +16,12 @@
     <script src="./libs/template-web.js"></script>
     <!-- 引入接口文件 -->
     <script src="./libs/http.js"></script>
+    <!-- 引入日期插件相关文件 -->
+    <link rel="stylesheet" href="./libs/jedate/css/jeDate-test.css">
+    <link rel="stylesheet" href="./libs/jedate/css/jedate.css">
+    <script src="./libs/jedate/js/jedate.js"></script>
+    <!-- 引入富文本插件相关文件 -->
+    <script src="./libs/wangEditor.min.js"></script>
 </head>
 
 <body>
@@ -52,12 +58,21 @@
                 </div>
                 <div class="form-group">
                     <label class="col-sm-2 control-label">发布时间：</label>
-                    <div class="col-sm-4">
+
+                    <div class="jeinpbox col-sm-4">
+                        <input name="date" type="text" class="jeinput" id="testico" placeholder="YYYY-MM-DD">
+                        <div class="icons jebtns"
+                            onclick="jeDate('#testico',{trigger:false,format: 'YYYY-MM-DD',zIndex: 10001, theme:{bgcolor:'#00A680',pnColor:'#00DDAA'},})">
+                        </div>
+
                     </div>
                 </div>
                 <div class="form-group">
                     <label for="inputEmail3" class="col-sm-2 control-label">文章内容：</label>
-                    <div class="col-sm-10">
+
+                    <div id="editor" class="col-sm-10">
+                        <!-- <p>欢迎使用 <b>wangEditor</b> 富文本编辑器</p> -->
+
                     </div>
                 </div>
                 <div class="form-group">
@@ -69,6 +84,85 @@
             </form>
         </div>
     </div>
+    <!-- 文章类别模板引擎 -->
+    <script id="list_page" type="text/html">
+        {{each data v}}
+        <option value='{{v.id}}'>{{v.name}}</option>
+        {{/each}}
+    </script>
+    <script>
+        $(function () {
+            // 日期插件引用
+            jeDate('#testico', {
+                isinitVal: true,
+                format: 'YYYY-MM-DD',
+                theme: {
+                    bgcolor: "#00A680",
+                    pnColor: "#00DDAA"
+                },
+                zIndex: 10001
+            })
+
+
+            // 富文本插件引用
+            var E = window.wangEditor
+            var editor = new E('#editor')
+            // 或者 var editor = new E( document.getElementById('editor') )
+            editor.create()
+
+            // 现将文章类别全部加载出来
+            $.ajax({
+                url: BigNew.category_list,
+                type: 'get',
+                dataType: 'json',
+
+                success: function (backData) {
+                    // console.log(backData);
+                    if (backData.code == 200) {
+                        $('.category').html(template('list_page', backData))
+                    }
+
+                }
+            });
+            // 图片预览
+            //1.给file表单元素注册onchange事件
+            $('#inputCover').change(function () {
+                //1.2 获取用户选择的图片
+                let file = this.files[0];
+                //1.3 将文件转为src路径
+                let url = URL.createObjectURL(file);
+                //1.4 将url路径赋值给img标签的src
+                $('.article_cover').attr('src', url);
+            });
+
+            // 发布 /  存为草稿
+            $('.btn-release,.btn-draft').on('click', function (e) {
+                //禁用表单默认提交事件
+                e.preventDefault();
+                let state = $(this).hasClass('btn-release') ? '已发布' : '草稿';
+                //创建FormData对象：参数是表单dom对象
+                let fd = new FormData($(form)[0])
+                // 有一些 表单name和参数对应的上    日期表单 我手动给他添加了name=date  其他不好添加 比如富文本必须通过他自己方式获取内容等等 这种以及不是表单的需要用append方式追加到fd上
+                fd.append('content', editor.txt.html());
+                fd.append('state', state)
+                $.ajax({
+                    url: BigNew.article_publish,
+                    type: 'post',
+                    dataType: 'json',
+                    data: fd,
+                    contentType: false,
+                    processData: false,
+                    success: function (backData) {
+                        // console.log(backData);
+                        if (backData.code == 200) {
+                            alert('操作成功')
+                            window.location.href = './article_list.html'
+                        }
+                    }
+                });
+            });
+        })
+    </script>
 </body>
 
 </html>

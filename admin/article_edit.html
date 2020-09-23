@@ -181,7 +181,7 @@
                 fd.append('id', id);
                 fd.append('content', editor.txt.html());
                 fd.append('state', state);
-
+                // 有一些 表单name和参数对应的上    日期表单 我手动给他添加了name=date  其他不好添加 比如富文本必须通过他自己方式获取内容等等 这种以及不是表单的需要用append方式追加到fd上
                 $.ajax({
                     url: BigNew.article_edit,
                     type: 'post',
