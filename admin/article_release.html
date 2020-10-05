@@ -145,6 +145,8 @@
                 // 有一些 表单name和参数对应的上    日期表单 我手动给他添加了name=date  其他不好添加 比如富文本必须通过他自己方式获取内容等等 这种以及不是表单的需要用append方式追加到fd上
                 fd.append('content', editor.txt.html());
                 fd.append('state', state)
+               
+                
                 $.ajax({
                     url: BigNew.article_publish,
                     type: 'post',
@@ -156,6 +158,7 @@
                         // console.log(backData);
                         if (backData.code == 200) {
                             alert('操作成功')
+                            parent.$('.level02 li:eq(0)').click()
                             window.location.href = './article_list.html'
                         }
                     }
